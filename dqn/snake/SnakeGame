@@ -4,10 +4,11 @@ from collections import deque
 
 class SnakeGame:
     def __init__(self, width=50, heigh=20):
-        # board
+        # board中
         # 0 -> empty
         # 1 -> snake
         # 2 -> food
+        self.all_dir = [(1,0),(-1,0),(0,-1),(0,1)]
         self.width = width
         self.heigh = heigh
         self.board = np.zeros([width,heigh])
@@ -32,7 +33,9 @@ class SnakeGame:
         print('#'*self.width)
 
 
-    def step(self):
+    def step(self, dir):
+        if not (dir[0] + self.direct[0] == 0 and dir[1] + self.direct[1] == 0):
+            self.direct = dir
         head = self.body[0]
         next_head = (head[0] + self.direct[0], head[1] + self.direct[1])
         
@@ -75,5 +78,5 @@ if __name__=="__main__":
     game = SnakeGame()
     for i in range(200):
         game.show()
-        game.step()
-        time.sleep(0.1)
+        game.step(game.all_dir[np.random.choice(4)])
+        time.sleep(0.01)
