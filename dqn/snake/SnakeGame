@@ -1,0 +1,79 @@
+import time, os
+import numpy as np
+from collections import deque
+
+class SnakeGame:
+    def __init__(self, width=50, heigh=20):
+        # board
+        # 0 -> empty
+        # 1 -> snake
+        # 2 -> food
+        self.width = width
+        self.heigh = heigh
+        self.board = np.zeros([width,heigh])
+        self.body = self.__generate_body(width,heigh)
+        self.food = self.__generate_food()
+        self.direct = (1,0)
+
+    def show(self):
+        os.system('cls')
+        print('#'*self.width)
+        for line in self.board.T:
+            str = "#"
+            for c in line:
+              if c == 1:
+                 str = str + "X"
+              elif c == 2:
+                 str = str + "O"
+              else:
+                 str = str + " "
+            str = str + "#"
+            print(str)
+        print('#'*self.width)
+
+
+    def step(self):
+        head = self.body[0]
+        next_head = (head[0] + self.direct[0], head[1] + self.direct[1])
+        
+        need_new_food = False
+        if next_head == self.food:
+            need_new_food = True
+        elif 0 > next_head[0] or self.width <= next_head[0] or 0 > next_head[1] or self.heigh <= next_head[1] or next_head in self.body:
+            raise Exception("Game is over")
+        else:
+            self.board[self.body.pop()] = 0
+            
+        self.body.appendleft(next_head)
+        self.board[next_head] = 1
+        if need_new_food:
+            self.food = self.__generate_food()
+
+    def __generate_food(self):
+        # todo zip
+        remain = np.where(self.board==0)
+        remain_size = len(remain[0])
+        if remain_size == 0:
+            raise Exception("Game is end, can't generate food")
+        randomIdx = np.random.randint(0, remain_size)
+        food = (remain[0][randomIdx],remain[1][randomIdx])
+        self.board[food] = 2
+        return food
+
+    def __generate_body(self, width, heigh):
+        head_h = round(heigh*0.5)
+        head_w = round(width*0.2)
+        snake_body = [(head_w, head_h),(head_w-1, head_h)]
+
+        for body_node in snake_body:
+            self.board[body_node]=1
+        return deque(snake_body)
+    
+
+
+if __name__=="__main__":
+    game = SnakeGame()
+    for i in range(200):
+        game.show()
+        game.step()
+        time.sleep(0.1)
