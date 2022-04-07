@@ -1,13 +1,14 @@
-import time, os
+import time, os, keyboard
 import numpy as np
 from collections import deque
 
 class SnakeGame:
-    def __init__(self, width=50, heigh=20):
-        # board中
+    def __init__(self, width=100, heigh=20):
+        # board
         # 0 -> empty
         # 1 -> snake
         # 2 -> food
+        # 3 -> head
         self.all_dir = [(1,0),(-1,0),(0,-1),(0,1)]
         self.width = width
         self.heigh = heigh
@@ -15,6 +16,8 @@ class SnakeGame:
         self.body = self.__generate_body(width,heigh)
         self.food = self.__generate_food()
         self.direct = (1,0)
+        self.score = 0
+        self.is_done = False
 
     def show(self):
         os.system('cls')
@@ -26,6 +29,8 @@ class SnakeGame:
                  str = str + "X"
               elif c == 2:
                  str = str + "O"
+              elif c == 3:
+                 str = str + "@"
               else:
                  str = str + " "
             str = str + "#"
@@ -34,30 +39,38 @@ class SnakeGame:
 
 
     def step(self, dir):
-        if not (dir[0] + self.direct[0] == 0 and dir[1] + self.direct[1] == 0):
-            self.direct = dir
-        head = self.body[0]
-        next_head = (head[0] + self.direct[0], head[1] + self.direct[1])
-        
-        need_new_food = False
-        if next_head == self.food:
-            need_new_food = True
-        elif 0 > next_head[0] or self.width <= next_head[0] or 0 > next_head[1] or self.heigh <= next_head[1] or next_head in self.body:
-            raise Exception("Game is over")
-        else:
-            self.board[self.body.pop()] = 0
+        try:
+            if self.is_done:
+                return
+            if not (dir[0] + self.direct[0] == 0 and dir[1] + self.direct[1] == 0):
+                self.direct = dir
+            head = self.body[0]
+            next_head = (head[0] + self.direct[0], head[1] + self.direct[1])
             
-        self.body.appendleft(next_head)
-        self.board[next_head] = 1
-        if need_new_food:
-            self.food = self.__generate_food()
+            need_new_food = False
+            if next_head == self.food:
+                self.score = self.score + 1
+                need_new_food = True
+            elif 0 > next_head[0] or self.width <= next_head[0] or 0 > next_head[1] or self.heigh <= next_head[1] or next_head in self.body:
+                raise RuntimeWarning("Game is over")
+            else:
+                self.board[self.body.pop()] = 0
+            self.board[head] = 1
+            self.body.appendleft(next_head)
+            self.board[next_head] = 3
+            if need_new_food:
+                self.food = self.__generate_food()
+        except RuntimeWarning as msg:
+            print(msg)
+            self.is_done = True
+
 
     def __generate_food(self):
         # todo zip
         remain = np.where(self.board==0)
         remain_size = len(remain[0])
         if remain_size == 0:
-            raise Exception("Game is end, can't generate food")
+            raise RuntimeWarning("Game is end, can't generate food")
         randomIdx = np.random.randint(0, remain_size)
         food = (remain[0][randomIdx],remain[1][randomIdx])
         self.board[food] = 2
@@ -72,11 +85,31 @@ class SnakeGame:
             self.board[body_node]=1
         return deque(snake_body)
     
-
+def prcoess_keyboard(e):
+    global next_dir
+    if e.event_type != 'down':
+        return
+    if e.name == 'left':
+        next_dir = (-1, 0)
+    elif e.name == 'right':
+        next_dir = (1, 0)
+    elif e.name == 'up':
+        next_dir = (0, -1)
+    elif e.name == 'down':
+        next_dir = (0, 1)
+    print(next_dir)
 
 if __name__=="__main__":
+    next_dir = (1, 0)
+    
     game = SnakeGame()
+    keyboard.hook(prcoess_keyboard)
+
     for i in range(200):
         game.show()
-        game.step(game.all_dir[np.random.choice(4)])
+        # game.step(game.all_dir[np.random.choice(4)])
+        game.step(next_dir)
+        if game.is_done:
+            print(game.score)
+            break;
         time.sleep(0.01)
