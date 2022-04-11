@@ -103,11 +103,11 @@ if __name__=="__main__":
     game = SnakeGame()
     keyboard.hook(prcoess_keyboard)
 
-    for i in range(200):
+    while True:
         game.show()
         # game.step(game.all_dir[np.random.choice(4)])
         game.step(next_dir)
         if game.is_done:
             print(game.score)
             break;
-        time.sleep(0.05)
+        time.sleep(0.1)
